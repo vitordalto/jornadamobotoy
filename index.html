@@ -298,6 +298,8 @@ function encerrar() {
   document.getElementById('pill').className = 'pill';
   document.getElementById('pill-txt').textContent = 'Parado';
   setGps('Jornada encerrada.', false);
+  document.getElementById('odo').innerHTML = '0<span class="odo-unit">,00</span>';
+  document.getElementById('odo-tempo').textContent = '--:--:--';
 
   renderRelatorio();
   download();
