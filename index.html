@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jornada">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Jornada Motoboy</title>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181c26;
+  --surface2: #1e2433;
+  --border: #2a3045;
+  --accent: #f5a623;
+  --red: #e74c3c;
+  --green: #2ecc71;
+  --text: #e8eaf0;
+  --muted: #6b7494;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+body { display: flex; flex-direction: column; }
+.app { max-width: 420px; margin: 0 auto; width: 100%; padding-bottom: 40px; flex: 1; display: flex; flex-direction: column; }
+
+/* AVISO */
+.aviso {
+  background: #1a1500; border: 1px solid #3d3000;
+  border-radius: 10px; padding: 13px 14px;
+  margin: 14px 16px 0; display: flex; gap: 10px; align-items: flex-start;
+}
+.aviso-texto { font-size: 12px; color: #c8a040; line-height: 1.55; flex: 1; }
+.aviso-texto strong { color: var(--accent); font-weight: 600; }
+.aviso-fechar { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; flex-shrink: 0; padding: 0; }
+
+/* HEADER */
+.header { padding: 22px 20px 14px; border-bottom: 1px solid var(--border); }
+.header-row { display: flex; justify-content: space-between; align-items: center; }
+.app-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.data-hoje { font-size: 20px; font-weight: 300; }
+.pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 11px; color: var(--muted); transition: all 0.3s;
+}
+.pill.ativo { background: #0d2b1a; border-color: #1a5c35; color: var(--green); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); transition: all 0.3s; }
+.pill.ativo .dot { background: var(--green); animation: pulsar 1.5s infinite; }
+@keyframes pulsar { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ODÔMETRO */
+.odo-wrap { padding: 28px 20px 20px; text-align: center; }
+.odo-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.odo {
+  font-size: 64px; font-weight: 700; letter-spacing: -2px; line-height: 1;
+  font-variant-numeric: tabular-nums; transition: color 0.3s;
+  font-family: 'Courier New', monospace;
+}
+.odo.ativo { color: var(--accent); }
+.odo-unit { font-size: 20px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.odo-tempo { font-size: 14px; color: var(--muted); margin-top: 10px; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+
+/* GPS */
+.gps-info { font-size: 11px; color: var(--muted); text-align: center; padding: 0 20px; margin-bottom: 4px; min-height: 16px; }
+.gps-info.erro { color: var(--red); }
+
+/* BOTÕES */
+.botoes { padding: 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+.btn {
+  width: 100%; padding: 18px; border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; transition: transform 0.12s, opacity 0.2s;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-iniciar { background: var(--accent); color: #0f1117; }
+.btn-encerrar { background: var(--red); color: #fff; }
+
+/* RELATÓRIO */
+.relatorio { margin: 16px 16px 0; display: none; }
+.relatorio.visivel { display: block; }
+.rel-titulo { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.jornada-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+  animation: surgir 0.3s ease;
+}
+@keyframes surgir { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.jornada-n { font-size: 10px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+.jornada-km { font-size: 28px; font-weight: 700; color: var(--accent); font-family: 'Courier New', monospace; margin-bottom: 8px; }
+.jornada-row { display: flex; justify-content: space-between; font-size: 12px; margin-top: 3px; }
+.jornada-row .lbl { color: var(--muted); }
+.jornada-row .val { font-family: 'Courier New', monospace; color: var(--text); }
+
+.totais {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-top: 4px;
+  display: none; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.totais.visivel { display: grid; }
+.t-lbl { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+.t-val { font-size: 20px; font-weight: 700; font-family: 'Courier New', monospace; }
+
+/* FOOTER */
+.footer { padding: 20px; margin-top: auto; border-top: 1px solid var(--border); }
+.footer p { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="aviso" id="aviso">
+    <div class="aviso-texto">
+      Para o GPS funcionar com a tela apagada, acesse <strong>Configurações &gt; Bateria &gt; [Jornada Motoboy] &gt; Sem restrições</strong>. Faça isso uma vez antes de trabalhar.
+    </div>
+    <button class="aviso-fechar" onclick="fecharAviso()">&#x2715;</button>
+  </div>
+
+  <div class="header">
+    <div class="app-label">Motoboy</div>
+    <div class="header-row">
+      <div class="data-hoje" id="data-hoje"></div>
+      <div class="pill" id="pill">
+        <div class="dot"></div>
+        <span id="pill-txt">Parado</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="odo-wrap">
+    <div class="odo-label">Km desta jornada</div>
+    <div class="odo" id="odo">0<span class="odo-unit">,00</span></div>
+    <div class="odo-tempo" id="odo-tempo">--:--:--</div>
+  </div>
+
+  <div class="gps-info" id="gps-info">Pronto. Pressione Iniciar jornada.</div>
+
+  <div class="botoes">
+    <button class="btn btn-iniciar" id="btn-ini" onclick="iniciar()">Iniciar jornada</button>
+    <button class="btn btn-encerrar" id="btn-enc" onclick="encerrar()" disabled>Encerrar jornada</button>
+  </div>
+
+  <div class="relatorio" id="relatorio">
+    <div class="rel-titulo">Jornadas de hoje</div>
+    <div id="lista"></div>
+    <div class="totais" id="totais">
+      <div>
+        <div class="t-lbl">Total km</div>
+        <div class="t-val" id="t-km">—</div>
+      </div>
+      <div>
+        <div class="t-lbl">Jornadas</div>
+        <div class="t-val" id="t-jorn">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>O arquivo .txt é baixado automaticamente<br>ao encerrar cada jornada.</p>
+  </div>
+
+</div>
+<script>
+var S = {
+  ativo: false,
+  inicio: null,
+  fim: null,
+  km: 0,
+  posAnterior: null,
+  watchId: null,
+  timer: null,
+  jornadas: [],
+  chaveHoje: ''
+};
+
+function hojeChave() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function hojeExtenso() {
+  return new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+  });
+}
+
+function hora(d) {
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function fmtKm(v) {
+  return (Math.round(v * 100) / 100).toFixed(2).replace('.', ',') + ' km';
+}
+
+function tempoStr(ms) {
+  var s = Math.floor(ms / 1000);
+  var h = Math.floor(s / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function distancia(lat1, lon1, lat2, lon2) {
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function atualizarOdo() {
+  var km = S.km;
+  var inteiro = Math.floor(km);
+  var dec = String(Math.round((km - inteiro) * 100)).padStart(2, '0');
+  document.getElementById('odo').innerHTML = inteiro + '<span class="odo-unit">,'+dec+'</span>';
+}
+
+function fecharAviso() {
+  document.getElementById('aviso').style.display = 'none';
+  localStorage.setItem('aviso_ok', '1');
+}
+
+function iniciar() {
+  if (!navigator.geolocation) {
+    setGps('GPS não disponível neste dispositivo.', true);
+    return;
+  }
+
+  S.ativo = true;
+  S.inicio = new Date();
+  S.km = 0;
+  S.posAnterior = null;
+  S.chaveHoje = hojeChave();
+
+  document.getElementById('btn-ini').disabled = true;
+  document.getElementById('btn-enc').disabled = false;
+  document.getElementById('odo').className = 'odo ativo';
+  document.getElementById('pill').className = 'pill ativo';
+  document.getElementById('pill-txt').textContent = 'Em jornada';
+  setGps('Obtendo sinal GPS...', false);
+
+  S.timer = setInterval(function() {
+    if (S.inicio) {
+      document.getElementById('odo-tempo').textContent = tempoStr(Date.now() - S.inicio);
+    }
+  }, 1000);
+
+  S.watchId = navigator.geolocation.watchPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      var acc = Math.round(pos.coords.accuracy);
+      setGps('GPS ativo — precisão: ' + acc + ' m', false);
+      if (S.posAnterior && acc < 50) {
+        var d = distancia(S.posAnterior.lat, S.posAnterior.lon, lat, lon);
+        if (d > 0.005) { S.km += d; atualizarOdo(); }
+      }
+      S.posAnterior = { lat: lat, lon: lon };
+    },
+    function(err) {
+      var msgs = {1:'Permissão de GPS negada.', 2:'Sinal GPS indisponível.', 3:'Timeout do GPS.'};
+      setGps(msgs[err.code] || 'Erro de GPS.', true);
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
+  );
+}
+
+function encerrar() {
+  if (!S.ativo) return;
+
+  if (S.watchId !== null) { navigator.geolocation.clearWatch(S.watchId); S.watchId = null; }
+  clearInterval(S.timer);
+
+  S.fim = new Date();
+  S.ativo = false;
+
+  var jornada = {
+    n: S.jornadas.length + 1,
+    inicio: S.inicio,
+    fim: S.fim,
+    km: Math.round(S.km * 100) / 100
+  };
+  S.jornadas.push(jornada);
+
+  document.getElementById('btn-ini').disabled = false;
+  document.getElementById('btn-enc').disabled = true;
+  document.getElementById('odo').className = 'odo';
+  document.getElementById('pill').className = 'pill';
+  document.getElementById('pill-txt').textContent = 'Parado';
+  setGps('Jornada encerrada.', false);
+
+  renderRelatorio();
+  download();
+}
+
+function setGps(txt, erro) {
+  var el = document.getElementById('gps-info');
+  el.textContent = txt;
+  el.className = 'gps-info' + (erro ? ' erro' : '');
+}
+
+function renderRelatorio() {
+  var lista = document.getElementById('lista');
+  lista.innerHTML = '';
+  S.jornadas.forEach(function(j) {
+    var dur = tempoStr(j.fim - j.inicio);
+    var card = document.createElement('div');
+    card.className = 'jornada-card';
+    card.innerHTML =
+      '<div class="jornada-n">Jornada ' + j.n + '</div>' +
+      '<div class="jornada-km">' + fmtKm(j.km) + '</div>' +
+      '<div class="jornada-row"><span class="lbl">Início</span><span class="val">' + hora(j.inicio) + '</span></div>' +
+      '<div class="jornada-row"><span class="lbl">Encerramento</span><span class="val">' + hora(j.fim) + '</span></div>' +
+      '<div class="jornada-row"><span class="lbl">Duração</span><span class="val">' + dur + '</span></div>';
+    lista.appendChild(card);
+  });
+
+  if (S.jornadas.length > 1) {
+    var totalKm = S.jornadas.reduce(function(s,j){ return s+j.km; }, 0);
+    document.getElementById('t-km').textContent = fmtKm(Math.round(totalKm*100)/100);
+    document.getElementById('t-jorn').textContent = S.jornadas.length;
+    document.getElementById('totais').className = 'totais visivel';
+  }
+
+  document.getElementById('relatorio').className = 'relatorio visivel';
+}
+
+function gerarTxt() {
+  var chave = S.chaveHoje;
+  var dataFmt = chave.split('-').reverse().join('/');
+  var linhas = [];
+  linhas.push('REGISTRO DE JORNADA — MOTOBOY');
+  linhas.push('Data: ' + dataFmt);
+  linhas.push('');
+  S.jornadas.forEach(function(j) {
+    linhas.push('--- Jornada ' + j.n + ' ---');
+    linhas.push('Inicio:        ' + hora(j.inicio));
+    linhas.push('Encerramento:  ' + hora(j.fim));
+    linhas.push('Duracao:       ' + tempoStr(j.fim - j.inicio));
+    linhas.push('Km percorrido: ' + j.km.toFixed(2).replace('.',',') + ' km');
+    linhas.push('');
+  });
+  if (S.jornadas.length > 1) {
+    var totalKm = S.jornadas.reduce(function(s,j){ return s+j.km; }, 0);
+    linhas.push('==============================');
+    linhas.push('Total do dia:  ' + (Math.round(totalKm*100)/100).toFixed(2).replace('.',',') + ' km');
+    linhas.push('Jornadas:      ' + S.jornadas.length);
+  }
+  return linhas.join('\r\n');
+}
+
+function download() {
+  var txt = gerarTxt();
+  var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'jornada_' + S.chaveHoje + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+}
+
+// Init
+document.getElementById('data-hoje').textContent = hojeExtenso();
+if (localStorage.getItem('aviso_ok')) {
+  document.getElementById('aviso').style.display = 'none';
+}
+
+// Registrar service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(err) {
+      console.log('SW erro:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
